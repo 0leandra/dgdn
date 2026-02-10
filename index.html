@@ -12,7 +12,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#EFEBE0">
-    <style>
+<style>
         /* --- STYLIZACJA (CSS) --- */
         :root {
             /* KOLORY BAZOWE */
@@ -29,17 +29,23 @@
             --font-main: 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
 
+        * {
+            box-sizing: border-box; /* Ważne dla obliczania szerokości/wysokości */
+        }
+
         body {
             background-color: #2c4a3b; 
             margin: 0;
             padding: 0;
             font-family: var(--font-main);
+            /* Używamy dvh (dynamic viewport height) dla Androidów, fallback do vh */
             height: 100vh;
+            height: 100dvh; 
             width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow: hidden; /* Blokujemy scrollowanie całego body */
         }
 
         /* Główny kontener aplikacji */
@@ -47,9 +53,10 @@
             background-color: var(--bg-color);
             color: var(--active-color);
             width: 90%;
-            height: 90%;
+            /* Zamiast sztywnego height, używamy max-height i flexa */
+            height: 85dvh; 
             max-width: 400px;
-            max-height: 700px;
+            max-height: 800px;
             border-radius: 25px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
             position: relative;
@@ -57,6 +64,9 @@
             flex-direction: column;
             overflow: hidden;
             transition: color 0.5s ease, background-color 0.5s ease;
+            
+            /* Bezpieczna strefa dla iOS */
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         /* --- MOTYWY --- */
@@ -77,155 +87,150 @@
         #app-container.inverted-colors button { background-color: var(--bg-color); color: var(--active-color); }
         #app-container.inverted-colors input { border-color: var(--bg-color); color: var(--bg-color); }
         
-        /* --- STYLIZACJA PLACEHOLDERA (POPRAWKA) --- */
-        
-        /* 1. DLA JASNEGO EKRANU (Login) */
-        /* Ustawiamy kolor tekstu (zielony) ale z przezroczystością 50%, żeby wyglądał jak placeholder */
-        input::placeholder {
-            color: var(--active-color);
-            opacity: 0.5; 
-        }
-        /* Wersja dla Firefoxa (wymagana) */
-        input::-moz-placeholder {
-            color: var(--active-color);
-            opacity: 0.5;
-        }
+        /* --- INPUT --- */
+        input::placeholder { color: var(--active-color); opacity: 0.5; }
+        input::-moz-placeholder { color: var(--active-color); opacity: 0.5; }
+        #app-container.inverted-colors input::placeholder { color: var(--bg-color); opacity: 0.6; }
+        #app-container.inverted-colors input::-moz-placeholder { color: var(--bg-color); opacity: 0.6; }
 
-        /* 2. DLA CIEMNEGO EKRANU (Odwrócony) */
-        #app-container.inverted-colors input::placeholder { 
-            color: var(--bg-color); /* Kremowy */
-            opacity: 0.6;
-        }
-        #app-container.inverted-colors input::-moz-placeholder { 
-            color: var(--bg-color);
-            opacity: 0.6;
-        }
-
-        /* --- EKRANY --- */
+        /* --- EKRANY (Naprawa Flexbox) --- */
         .screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
             
             display: none;
-            flex-direction: column;
-            justify-content: center;
+            flex-direction: column; /* Układamy elementy pionowo */
+            justify-content: flex-start; /* Zaczynamy od góry */
             align-items: center;
-            padding: 40px;
-            box-sizing: border-box;
+            
+            padding: 20px; /* Mniejszy padding, żeby więcej się zmieściło */
             text-align: center;
             z-index: 20;
             opacity: 0;
             transition: opacity 0.5s ease;
         }
+
+        /* --- NOWA KLASA: Wyśrodkowanie dla prostych ekranów (Język, Login, Koniec) --- */
+        .screen-centered {
+            justify-content: center !important; /* Wymusza środek */
+            gap: 20px; /* Odstęp między elementami */
+        }
+
+
         .screen.active { display: flex; opacity: 1; }
 
         /* --- SPLASH SCREEN --- */
         #screen-splash {
             background-color: var(--bg-color); 
             padding: 0;
+            justify-content: center; /* Splash musi być wyśrodkowany */
             overflow: hidden;
             z-index: 100;
         }
-
         #splash-bg {
-            position: absolute;
-            width: 100%; height: 100%;
-            top: 0; left: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+            display: flex; justify-content: center; align-items: center;
         }
-
         .splash-diamond {
-            position: absolute;
-            transform: rotate(45deg);
-            box-shadow: 0 0 0 rgba(0,0,0,0); 
+            position: absolute; transform: rotate(45deg); box-shadow: 0 0 0 rgba(0,0,0,0); 
         }
-
         .splash-center-diamond {
-            position: absolute;
-            z-index: 50; 
-            background-color: var(--bg-color); 
-            width: 260px; 
-            height: 260px;
-            transform: rotate(45deg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 40px rgba(0,0,0,0.15);
-            top: 50%; left: 50%;
-            margin-top: -130px;
-            margin-left: -130px;
+            position: absolute; z-index: 50; background-color: var(--bg-color); 
+            width: 260px; height: 260px; transform: rotate(45deg);
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 40px rgba(0,0,0,0.15); top: 50%; left: 50%;
+            margin-top: -130px; margin-left: -130px;
         }
-
-        .splash-content {
-            transform: rotate(-45deg); 
-            text-align: center;
-            width: 160%; 
-        }
-
+        .splash-content { transform: rotate(-45deg); text-align: center; width: 160%; }
         .splash-content h1 {
-            color: var(--cat-green); 
-            font-size: 2.2rem; 
-            margin: 0;
-            line-height: 1;
-            text-transform: uppercase;
-            letter-spacing: -1px;
+            color: var(--cat-green); font-size: 2.2rem; margin: 0;
+            line-height: 1; text-transform: uppercase; letter-spacing: -1px;
         }
-
         .splash-subtitle {
-            color: var(--cat-purple);
-            font-size: 0.9rem;
-            font-weight: 600;
-            font-style: italic;
-            margin: 5px 35px 0 0; 
-            padding: 0;
-            text-align: right; 
-            letter-spacing: 0.5px;
+            color: var(--cat-purple); font-size: 0.9rem; font-weight: 600;
+            font-style: italic; margin: 5px 35px 0 0; padding: 0;
+            text-align: right; letter-spacing: 0.5px;
         }
 
         /* --- DEKORACJE --- */
         .border-decoration {
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            pointer-events: none;
-            z-index: 10;
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none; z-index: 10;
         }
         .diamond-border-item {
-            width: 10px; height: 10px;
-            transform: rotate(45deg);
-            position: absolute;
+            width: 10px; height: 10px; transform: rotate(45deg); position: absolute;
         }
 
-        /* --- UI ELEMENTY --- */
-        h1, h2, p {
-            color: var(--active-color);
-            transition: color 0.5s ease;
+        /* --- UI ELEMENTY - RESPONSYWNOŚĆ --- */
+        
+        /* HEADER (Góra) - sztywna wysokość */
+        h1, h2 { 
+            color: var(--active-color); 
+            text-transform: uppercase; font-weight: 800; letter-spacing: 1px;
+            margin-top: 20px; margin-bottom: 20px;
+            flex-shrink: 0; /* Nie zgniataj nagłówka */
         }
-        h1, h2 { text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
-        p { font-size: 1.5rem; font-weight: 700; line-height: 1.4; margin-bottom: 40px; }
+        
+        /* CONTENT (Środek) - elastyczny */
+        /* To jest kluczowa klasa naprawiająca layout */
+        .content-area {
+            flex-grow: 1; /* Zajmij całe dostępne miejsce */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            overflow-y: auto; /* Scrolluj jeśli się nie mieści */
+            min-height: 0; /* Fix dla Firefoxa/Flexboxa */
+            padding: 10px 0;
+        }
+
+        /* KATEGORIE - specyficzne ustawienia */
+        #categories-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        p { 
+            font-size: 1.5rem; font-weight: 700; line-height: 1.4; margin: 0; 
+            padding: 20px;
+        }
 
         input {
-            padding: 15px; border-radius: 10px;
-            border: 2px solid var(--active-color);
+            padding: 15px; border-radius: 10px; border: 2px solid var(--active-color);
             background: transparent; color: var(--active-color);
-            font-size: 1.2rem; text-align: center;
-            width: 80%; outline: none; margin-bottom: 20px;
+            font-size: 1.2rem; text-align: center; width: 80%; outline: none; margin-bottom: 20px;
             transition: border-color 0.5s ease, color 0.5s ease;
         }
 
+        /* FOOTER (Dół) - sztywna wysokość */
+        .footer-area {
+            flex-shrink: 0; /* Nie zgniataj stopki */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-bottom: 10px;
+        }
+
         button {
-            background-color: var(--active-color);
-            color: var(--bg-color);
-            border: none; padding: 15px 30px;
-            font-size: 1.2rem; border-radius: 50px;
+            background-color: var(--active-color); color: var(--bg-color);
+            border: none; padding: 15px 30px; font-size: 1.2rem; border-radius: 50px;
             cursor: pointer; font-weight: bold; text-transform: uppercase;
-            width: 100%; margin: 10px 0;
+            width: 100%; margin: 5px 0;
             transition: transform 0.1s, background-color 0.5s ease;
         }
         button:active { transform: scale(0.95); }
 
-        button.category-btn { background-color: transparent; border: 3px solid; }
+        button.category-btn { 
+            background-color: transparent; border: 3px solid; 
+            width: 90%; /* Niech nie dotykają krawędzi */
+            margin: 5px 0;
+        }
         button.category-btn.btn-orange { border-color: var(--cat-orange); color: var(--cat-orange); }
         button.category-btn.btn-orange:hover { background-color: var(--cat-orange); color: var(--bg-color); }
         button.category-btn.btn-red { border-color: var(--cat-red); color: var(--cat-red); }
@@ -234,17 +239,12 @@
         button.category-btn.btn-purple:hover { background-color: var(--cat-purple); color: var(--bg-color); }
 
         .back-btn {
-            margin-top: 20px; font-size: 0.9rem; text-decoration: underline;
+            margin-top: 10px; font-size: 0.9rem; text-decoration: underline;
             background: none; color: var(--active-color); padding: 10px; width: auto;
             transition: color 0.5s ease;
         }
-        /* --- NOWA KLASA: DLA DŁUGICH PYTAŃ --- */
-        /* Normalnie czcionka ma 1.5rem. Tutaj zmniejszamy ją do 1.1rem */
-        .long-text {
-            font-size: 1.1rem !important; 
-            line-height: 1.3 !important;
-        }
 
+        .long-text { font-size: 1.1rem !important; line-height: 1.3 !important; }
     </style>
 </head>
 <body>
@@ -263,37 +263,41 @@
         </div>
     </div>
 
-    <div id="screen-language" class="screen">
+    <div id="screen-language" class="screen screen-centered">
         <h2>Wybierz Język<br>Choose Language</h2>
         <button onclick="setLanguage('pl')">PL</button>
         <button onclick="setLanguage('en')">ENG</button>
     </div>
 
-    <div id="screen-login" class="screen">
+    <div id="screen-login" class="screen screen-centered">
         <h2 id="txt-login-header">Podaj hasło,<br> aby rozpocząć</h2>
         <input type="password" id="password-input" placeholder="****">
         <button id="btn-login" onclick="checkPassword()">Start</button>
         <div id="error-msg" style="color:red; display:none; margin-top:0px;">Błędne hasło!</div>
     </div>
 
-    <div id="screen-categories" class="screen">
+  <div id="screen-categories" class="screen">
         <h2 id="txt-cat-header">Wybierz Kategorię</h2>
-        <div style="flex-grow: 1; width: 100%; display: flex; align-items: center; justify-content: center;">
-            <div id="categories-list" style="width: 100%;"></div>
+        <div class="content-area">
+            <div id="categories-list"></div>
         </div>
-        <button id="btn-change-lang" class="back-btn" onclick="showScreen('screen-language')">Zmień język</button>
+        <div class="footer-area">
+            <button id="btn-change-lang" class="back-btn" onclick="showScreen('screen-language')">Zmień język</button>
+        </div>
     </div>
 
-    <div id="screen-game" class="screen">
-        <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center;">
+<div id="screen-game" class="screen">
+        <div class="content-area">
             <p id="question-text">Pytanie...</p>
         </div>
-        <button id="btn-next" onclick="nextQuestion()">Następne</button>
-        <button id="btn-change-cat" class="back-btn" onclick="showScreen('screen-categories'); resetThemeToDefault();">Zmień kategorię</button>
+        <div class="footer-area">
+            <button id="btn-next" onclick="nextQuestion()">Następne</button>
+            <button id="btn-change-cat" class="back-btn" onclick="showScreen('screen-categories'); resetThemeToDefault();">Zmień kategorię</button>
+        </div>
     </div>
 
-    <div id="screen-finished" class="screen">
-        <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+    <div id="screen-finished" class="screen screen-centered">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
             <h2 style="font-size: 3rem; margin-bottom: 20px;">✓</h2>
             <p id="txt-finish-header">To już wszystkie pytania w tej kategorii!</p>
         </div>
