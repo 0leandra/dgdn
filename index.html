@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DOGADANE</title>
+    <link rel="icon" type="image/png" href="https://s12.gifyu.com/images/bv25g.png">
+
+    <link rel="apple-touch-icon" href="https://s12.gifyu.com/images/bv25g.png">
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#EFEBE0">
+    <style>
+        /* --- STYLIZACJA (CSS) --- */
+        :root {
+            /* KOLORY BAZOWE */
+            --bg-color: #EFEBE0; /* Kremowy */
+            --base-green: #3F7058; 
+            
+            /* KOLORY KATEGORII */
+            --cat-orange: #E89B26; 
+            --cat-red: #C0392B;    
+            --cat-purple: #8E44AD; 
+
+            /* Dynamiczny kolor motywu */
+            --active-color: var(--base-green); 
+            --font-main: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #2c4a3b; 
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-main);
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Główny kontener aplikacji */
+        #app-container {
+            background-color: var(--bg-color);
+            color: var(--active-color);
+            width: 90%;
+            height: 90%;
+            max-width: 400px;
+            max-height: 700px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: color 0.5s ease, background-color 0.5s ease;
+        }
+
+        /* --- MOTYWY --- */
+        #app-container.theme-orange { --active-color: var(--cat-orange); }
+        #app-container.theme-red { --active-color: var(--cat-red); }
+        #app-container.theme-purple { --active-color: var(--cat-purple); }
+        #app-container.theme-green { --active-color: var(--base-green); }
+
+        /* --- TRYB ODWRÓCONY --- */
+        #app-container.inverted-colors {
+            background-color: var(--active-color);
+            color: var(--bg-color);
+        }
+        #app-container.inverted-colors h1,
+        #app-container.inverted-colors h2,
+        #app-container.inverted-colors p,
+        #app-container.inverted-colors .back-btn { color: var(--bg-color); }
+        #app-container.inverted-colors button { background-color: var(--bg-color); color: var(--active-color); }
+        #app-container.inverted-colors input { border-color: var(--bg-color); color: var(--bg-color); }
+        
+        /* --- STYLIZACJA PLACEHOLDERA (POPRAWKA) --- */
+        
+        /* 1. DLA JASNEGO EKRANU (Login) */
+        /* Ustawiamy kolor tekstu (zielony) ale z przezroczystością 50%, żeby wyglądał jak placeholder */
+        input::placeholder {
+            color: var(--active-color);
+            opacity: 0.5; 
+        }
+        /* Wersja dla Firefoxa (wymagana) */
+        input::-moz-placeholder {
+            color: var(--active-color);
+            opacity: 0.5;
+        }
+
+        /* 2. DLA CIEMNEGO EKRANU (Odwrócony) */
+        #app-container.inverted-colors input::placeholder { 
+            color: var(--bg-color); /* Kremowy */
+            opacity: 0.6;
+        }
+        #app-container.inverted-colors input::-moz-placeholder { 
+            color: var(--bg-color);
+            opacity: 0.6;
+        }
+
+        /* --- EKRANY --- */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            box-sizing: border-box;
+            text-align: center;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .screen.active { display: flex; opacity: 1; }
+
+        /* --- SPLASH SCREEN --- */
+        #screen-splash {
+            background-color: var(--bg-color); 
+            padding: 0;
+            overflow: hidden;
+            z-index: 100;
+        }
+
+        #splash-bg {
+            position: absolute;
+            width: 100%; height: 100%;
+            top: 0; left: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .splash-diamond {
+            position: absolute;
+            transform: rotate(45deg);
+            box-shadow: 0 0 0 rgba(0,0,0,0); 
+        }
+
+        .splash-center-diamond {
+            position: absolute;
+            z-index: 50; 
+            background-color: var(--bg-color); 
+            width: 260px; 
+            height: 260px;
+            transform: rotate(45deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 40px rgba(0,0,0,0.15);
+            top: 50%; left: 50%;
+            margin-top: -130px;
+            margin-left: -130px;
+        }
+
+        .splash-content {
+            transform: rotate(-45deg); 
+            text-align: center;
+            width: 160%; 
+        }
+
+        .splash-content h1 {
+            color: var(--cat-green); 
+            font-size: 2.2rem; 
+            margin: 0;
+            line-height: 1;
+            text-transform: uppercase;
+            letter-spacing: -1px;
+        }
+
+        .splash-subtitle {
+            color: var(--cat-purple);
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-style: italic;
+            margin: 5px 35px 0 0; 
+            padding: 0;
+            text-align: right; 
+            letter-spacing: 0.5px;
+        }
+
+        /* --- DEKORACJE --- */
+        .border-decoration {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .diamond-border-item {
+            width: 10px; height: 10px;
+            transform: rotate(45deg);
+            position: absolute;
+        }
+
+        /* --- UI ELEMENTY --- */
+        h1, h2, p {
+            color: var(--active-color);
+            transition: color 0.5s ease;
+        }
+        h1, h2 { text-transform: uppercase; font-weight: 800; letter-spacing: 1px; }
+        p { font-size: 1.5rem; font-weight: 700; line-height: 1.4; margin-bottom: 40px; }
+
+        input {
+            padding: 15px; border-radius: 10px;
+            border: 2px solid var(--active-color);
+            background: transparent; color: var(--active-color);
+            font-size: 1.2rem; text-align: center;
+            width: 80%; outline: none; margin-bottom: 20px;
+            transition: border-color 0.5s ease, color 0.5s ease;
+        }
+
+        button {
+            background-color: var(--active-color);
+            color: var(--bg-color);
+            border: none; padding: 15px 30px;
+            font-size: 1.2rem; border-radius: 50px;
+            cursor: pointer; font-weight: bold; text-transform: uppercase;
+            width: 100%; margin: 10px 0;
+            transition: transform 0.1s, background-color 0.5s ease;
+        }
+        button:active { transform: scale(0.95); }
+
+        button.category-btn { background-color: transparent; border: 3px solid; }
+        button.category-btn.btn-orange { border-color: var(--cat-orange); color: var(--cat-orange); }
+        button.category-btn.btn-orange:hover { background-color: var(--cat-orange); color: var(--bg-color); }
+        button.category-btn.btn-red { border-color: var(--cat-red); color: var(--cat-red); }
+        button.category-btn.btn-red:hover { background-color: var(--cat-red); color: var(--bg-color); }
+        button.category-btn.btn-purple { border-color: var(--cat-purple); color: var(--cat-purple); }
+        button.category-btn.btn-purple:hover { background-color: var(--cat-purple); color: var(--bg-color); }
+
+        .back-btn {
+            margin-top: 20px; font-size: 0.9rem; text-decoration: underline;
+            background: none; color: var(--active-color); padding: 10px; width: auto;
+            transition: color 0.5s ease;
+        }
+        /* --- NOWA KLASA: DLA DŁUGICH PYTAŃ --- */
+        /* Normalnie czcionka ma 1.5rem. Tutaj zmniejszamy ją do 1.1rem */
+        .long-text {
+            font-size: 1.1rem !important; 
+            line-height: 1.3 !important;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="app-container" class="theme-green">
+    
+    <div id="diamond-border" class="border-decoration"></div>
+
+    <div id="screen-splash" class="screen active">
+        <div id="splash-bg"></div>
+        <div class="splash-center-diamond">
+            <div class="splash-content">
+                <h1>DOGADANE</h1>
+                <p class="splash-subtitle">by Aniamaluje</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-language" class="screen">
+        <h2>Wybierz Język<br>Choose Language</h2>
+        <button onclick="setLanguage('pl')">PL</button>
+        <button onclick="setLanguage('en')">ENG</button>
+    </div>
+
+    <div id="screen-login" class="screen">
+        <h2 id="txt-login-header">Podaj hasło,<br> aby rozpocząć</h2>
+        <input type="password" id="password-input" placeholder="****">
+        <button id="btn-login" onclick="checkPassword()">Start</button>
+        <div id="error-msg" style="color:red; display:none; margin-top:0px;">Błędne hasło!</div>
+    </div>
+
+    <div id="screen-categories" class="screen">
+        <h2 id="txt-cat-header">Wybierz Kategorię</h2>
+        <div style="flex-grow: 1; width: 100%; display: flex; align-items: center; justify-content: center;">
+            <div id="categories-list" style="width: 100%;"></div>
+        </div>
+        <button id="btn-change-lang" class="back-btn" onclick="showScreen('screen-language')">Zmień język</button>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center;">
+            <p id="question-text">Pytanie...</p>
+        </div>
+        <button id="btn-next" onclick="nextQuestion()">Następne</button>
+        <button id="btn-change-cat" class="back-btn" onclick="showScreen('screen-categories'); resetThemeToDefault();">Zmień kategorię</button>
+    </div>
+
+    <div id="screen-finished" class="screen">
+        <div style="flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <h2 style="font-size: 3rem; margin-bottom: 20px;">✓</h2>
+            <p id="txt-finish-header">To już wszystkie pytania w tej kategorii!</p>
+        </div>
+        <button id="btn-back-menu" onclick="resetApp()">Wróć do menu</button>
+    </div>
+
+</div>
+
+<script>
+    /* --- KONFIGURACJA --- */
+    const CONFIG = { 
+        apiUrl: "https://script.google.com/macros/s/AKfycbytgqJpT6NbOTS6uU2C_l_BWC5VPd4nMkzHu6WwX25O3nEWIM_DolX-NdoAhrWQtrJJ/exec"
+    };
+
+    /* --- ZMIENNE GLOBALNE (ZADEKLAROWANE TYLKO RAZ) --- */
+    let currentLang = 'pl'; 
+    let isLoggedIn = false; 
+    let DATABASE = {};
+    let currentCategory = []; // To była przyczyna błędu - teraz jest tylko jedna deklaracja jako tablica
+
+    /* --- BAZA TEKSTÓW (UI) --- */
+    const TEXTS = {
+        pl: {
+            passPlaceholder: "Hasło...",
+            loginBtn: "Start",
+            loading: "Ładowanie...",
+            errorMsg: "Błędne hasło lub problem z połączeniem.",
+            loginHeader: "Podaj hasło,<br> aby rozpocząć", 
+            catHeader: "Wybierz Kategorię",
+            changeLangBtn: "Zmień język",
+            nextBtn: "Następne",
+            changeCatBtn: "Zmień kategorię",
+            finishHeader: "To już wszystkie pytania w tej kategorii!",
+            backMenuBtn: "Wróć do menu"
+        },
+        en: {
+            passPlaceholder: "Password...",
+            loginBtn: "Start",
+            loading: "Loading...",
+            errorMsg: "Incorrect password or connection issue.",
+            loginHeader: "Enter password<br> to start",
+            catHeader: "Choose Category",
+            changeLangBtn: "Change language",
+            nextBtn: "Next",
+            changeCatBtn: "Change category",
+            finishHeader: "That's all questions in this category!",
+            backMenuBtn: "Back to menu"
+        }
+    };
+
+    const CATEGORY_THEMES = {
+        "Lekkie i proste": "orange",
+        "Głębsze": "red",
+        "Intymne i refleksyjne": "purple",
+        "Light & Simple": "orange",
+        "Deeper": "red",
+        "Intimate & Reflective": "purple"
+    };
+
+    const COLORS_SEQ = ['var(--base-green)', 'var(--cat-orange)', 'var(--cat-red)', 'var(--cat-purple)'];
+
+    /* --- NAWIGACJA I EKRANY --- */
+    function showScreen(screenId) {
+        if(screenId === 'screen-login' || screenId === 'screen-language') {
+            resetThemeToDefault();
+            document.getElementById('app-container').classList.remove('inverted-colors');
+        }
+        
+        const activeScreens = document.querySelectorAll('.screen.active');
+        activeScreens.forEach(el => {
+            el.style.opacity = '0';
+            setTimeout(() => el.classList.remove('active'), 500);
+        });
+        
+        const target = document.getElementById(screenId);
+        if (target) {
+            target.classList.add('active');
+            setTimeout(() => target.style.opacity = '1', 50);
+        }
+    }
+
+    function setLanguage(lang) {
+        currentLang = lang; 
+        const t = TEXTS[currentLang];
+        
+        // 1. Aktualizacja tekstów
+        document.getElementById('password-input').placeholder = t.passPlaceholder;
+        
+        const btnLogin = document.getElementById('btn-login');
+        if (btnLogin) btnLogin.innerText = t.loginBtn;
+        
+        const loginHeader = document.getElementById('txt-login-header'); 
+        if (loginHeader) loginHeader.innerHTML = t.loginHeader;
+        
+        const errorMsg = document.getElementById('error-msg');
+        if (errorMsg) errorMsg.innerText = t.errorMsg;
+
+        const catHeader = document.getElementById('txt-cat-header');
+        if (catHeader) catHeader.innerText = t.catHeader;
+
+        const nextBtn = document.getElementById('btn-next');
+        if (nextBtn) nextBtn.innerText = t.nextBtn;
+
+        const btnChangeLang = document.getElementById('btn-change-lang');
+        if (btnChangeLang) btnChangeLang.innerText = t.changeLangBtn;
+
+        const btnChangeCat = document.getElementById('btn-change-cat');
+        if (btnChangeCat) btnChangeCat.innerText = t.changeCatBtn;
+        
+        const finishHeader = document.getElementById('txt-finish-header');
+        if (finishHeader) finishHeader.innerText = t.finishHeader;
+
+        const backMenuBtn = document.getElementById('btn-back-menu');
+        if (backMenuBtn) backMenuBtn.innerText = t.backMenuBtn;
+
+        // 2. Logika przekierowania
+        if (isLoggedIn) {
+            initCategories(); 
+            showScreen('screen-categories');
+        } else {
+            showScreen('screen-login');
+        }
+    }
+
+    /* --- LOGOWANIE I POBIERANIE DANYCH --- */
+    async function checkPassword() {
+        const input = document.getElementById('password-input').value.trim();
+        const btn = document.getElementById('btn-login');
+        const errorMsg = document.getElementById('error-msg');
+        
+        if (!input) return;
+
+        btn.disabled = true;
+        btn.innerText = TEXTS[currentLang].loading;
+        errorMsg.style.display = 'none';
+
+        try {
+            const response = await fetch(CONFIG.apiUrl + "?p=" + encodeURIComponent(input));
+            const data = await response.json();
+
+            if (data.error) throw new Error("Pass");
+
+            DATABASE = data;
+            isLoggedIn = true;
+            initCategories(); 
+            showScreen('screen-categories');
+            
+        } catch (e) {
+            console.error("Błąd:", e);
+            errorMsg.innerText = TEXTS[currentLang].errorMsg;
+            errorMsg.style.display = 'block';
+        } finally {
+            btn.disabled = false;
+            btn.innerText = TEXTS[currentLang].loginBtn;
+        }
+    }
+
+    /* --- KATEGORIE I GRA --- */
+    function initCategories() {
+        const list = document.getElementById('categories-list');
+        list.innerHTML = ''; 
+        
+        const cats = DATABASE[currentLang] || {};
+
+        Object.keys(cats).forEach(category => {
+            const btn = document.createElement('button');
+            const colorKey = CATEGORY_THEMES[category] || 'green';
+            btn.className = `category-btn btn-${colorKey}`;
+            btn.innerText = category;
+            btn.onclick = () => startGame(category, colorKey);
+            list.appendChild(btn);
+        });
+    }
+
+    function startGame(categoryName, themeColor) {
+        setAppTheme(`theme-${themeColor}`);
+        document.getElementById('app-container').classList.remove('inverted-colors');
+        
+        if (DATABASE[currentLang] && DATABASE[currentLang][categoryName]) {
+            // Tu używamy już istniejącej zmiennej currentCategory, nie deklarujemy jej ponownie!
+            currentCategory = [...DATABASE[currentLang][categoryName]];
+            nextQuestion();
+            showScreen('screen-game');
+        }
+    }
+
+    function nextQuestion() {
+        const textEl = document.getElementById('question-text');
+        
+        // Sprawdzenie czy są pytania
+        if (!currentCategory || currentCategory.length === 0) {
+            finishGame();
+            return;
+        }
+
+        // Losowanie
+        const randomIndex = Math.floor(Math.random() * currentCategory.length);
+        const question = currentCategory[randomIndex];
+        currentCategory.splice(randomIndex, 1);
+        
+        // Animacja zanikania
+        textEl.style.opacity = 0;
+        
+        setTimeout(() => {
+            textEl.innerText = question;
+            
+            if (question.length > 120) {
+                textEl.classList.add('long-text');
+            } else {
+                textEl.classList.remove('long-text');
+            }
+
+            textEl.style.opacity = 1;
+        }, 200);
+    }
+
+    function finishGame() {
+        // Aktualizacja tekstów przed pokazaniem ekranu
+        const t = TEXTS[currentLang];
+        const finishHeader = document.getElementById('txt-finish-header');
+        if (finishHeader) finishHeader.innerText = t.finishHeader;
+        const backMenuBtn = document.getElementById('btn-back-menu');
+        if (backMenuBtn) backMenuBtn.innerText = t.backMenuBtn;
+
+        showScreen('screen-finished');
+        setTimeout(() => document.getElementById('app-container').classList.add('inverted-colors'), 100);
+    }
+
+    function resetApp() {
+        document.getElementById('app-container').classList.remove('inverted-colors');
+        resetThemeToDefault();
+        
+        if (isLoggedIn) {
+            showScreen('screen-categories');
+        } else {
+            showScreen('screen-login');
+        }
+    }
+
+    /* --- WYGLĄD I MOTYWY --- */
+    function setAppTheme(themeClass) {
+        const container = document.getElementById('app-container');
+        container.classList.remove('theme-green', 'theme-orange', 'theme-red', 'theme-purple');
+        container.classList.add(themeClass);
+    }
+    function resetThemeToDefault() { setAppTheme('theme-green'); }
+
+    /* --- DEKORACJE --- */
+    function createBorderDiamonds() {
+        const container = document.getElementById('diamond-border');
+        if(!container) return;
+        container.innerHTML = '';
+        
+        let colorIndex = 0;
+        const addDiamond = (styles) => {
+            const d = document.createElement('div');
+            d.className = 'diamond-border-item';
+            d.style.backgroundColor = COLORS_SEQ[colorIndex % COLORS_SEQ.length];
+            Object.assign(d.style, styles);
+            container.appendChild(d);
+            colorIndex++;
+        };
+        const countTop = 8; const countSide = 12; const padding = 8; 
+        for (let i = 0; i < countTop; i++) addDiamond({ top: `${padding}px`, left: `${(i + 1) * (100 / (countTop + 1))}%` });
+        for (let i = 0; i < countSide; i++) addDiamond({ right: `${padding}px`, top: `${(i + 1) * (100 / (countSide + 1))}%` });
+        for (let i = 0; i < countTop; i++) addDiamond({ bottom: `${padding}px`, right: `${(i + 1) * (100 / (countTop + 1))}%` });
+        for (let i = 0; i < countSide; i++) addDiamond({ left: `${padding}px`, bottom: `${(i + 1) * (100 / (countSide + 1))}%` });
+    }
+
+    function createSplashBackground() {
+        const container = document.getElementById('splash-bg');
+        if(!container) return;
+        container.innerHTML = ''; 
+        
+        const centerSize = 260; 
+        const neighborSize = 520; 
+        
+        const diamonds = [
+            { x: 1, y: 1, color: 'var(--cat-purple)', zIndex: 1 },    
+            { x: -1, y: 1, color: 'var(--cat-red)', zIndex: 2 },     
+            { x: -1, y: -1, color: 'var(--base-green)', zIndex: 3 }, 
+            { x: 1, y: -1, color: 'var(--cat-orange)', zIndex: 4 },  
+        ];
+
+        const addDiamond = (data, customClip) => {
+            const d = document.createElement('div');
+            d.className = 'splash-diamond';
+            d.style.width = `${neighborSize}px`;
+            d.style.height = `${neighborSize}px`;
+            d.style.backgroundColor = data.color;
+            d.style.zIndex = data.zIndex;
+            
+            if (customClip) {
+                d.style.clipPath = customClip;
+            }
+
+            d.style.left = `calc(50% + ${data.x * centerSize}px - ${neighborSize/2}px)`;
+            d.style.top = `calc(50% + ${data.y * centerSize}px - ${neighborSize/2}px)`;
+            container.appendChild(d);
+        }
+
+        diamonds.forEach(d => addDiamond(d));
+        
+        addDiamond({ 
+            x: 1, 
+            y: 1, 
+            color: 'var(--cat-purple)', 
+            zIndex: 5 
+        }, 'polygon(0 0, 100% 0, 100% 100%)'); 
+    }
+
+    /* --- START --- */
+    window.onload = () => {
+        createBorderDiamonds();
+        createSplashBackground();
+
+        const passInput = document.getElementById('password-input');
+        if(passInput) {
+            passInput.addEventListener('keyup', (e) => {
+                if (e.key === "Enter") checkPassword();
+            });
+        }
+
+        setTimeout(() => {
+            showScreen('screen-language');
+        }, 3000); 
+    };
+</script>
+
+</body>
+</html>
